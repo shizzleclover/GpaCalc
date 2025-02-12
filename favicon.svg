@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+    <style>
+        path { 
+            fill: #667eea;
+            stroke: #4a5568;
+            stroke-width: 1;
+        }
+        @media (prefers-color-scheme: dark) {
+            path { 
+                fill: #764ba2;
+                stroke: #e2e8f0;
+            }
+        }
+    </style>
+    <path d="M16 2C8.268 2 2 8.268 2 16s6.268 14 14 14 14-6.268 14-14S23.732 2 16 2zm0 25.2c-6.188 0-11.2-5.012-11.2-11.2S9.812 4.8 16 4.8s11.2 5.012 11.2 11.2-5.012 11.2-11.2 11.2zm1.4-16.8h-2.8v5.6H9v2.8h5.6V24h2.8v-5.6H23v-2.8h-5.6z"/>
+</svg>
