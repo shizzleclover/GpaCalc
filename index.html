@@ -1,62 +1,53 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPA Calculator Tool</title>
+    <title>GPA Calculator</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Updated favicon links -->
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-            <path class="sun" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-    </button>
-    <div class="calculator">
-        <h2>Unreleased GPA Calculator</h2>
-        
-        <div class="input-group">
-            <label for="numSemesters">Number of completed semesters:</label>
-            <input type="number" id="numSemesters" min="1" max="12" placeholder="Enter number (1-12)">
-        </div>
+    <div class="container">
+        <div class="calculator">
+            <h2>Unreleased GPA Calculator</h2>
 
-        <button onclick="generateInputs()">Enter GPAs</button>
-        
-        <div id="gpaInputs"></div>
+            <div class="input-group">
+                <label for="numSemesters">Number of completed semesters:</label>
+                <input type="number" id="numSemesters" min="1" max="12" placeholder="Enter number (1-12)">
+            </div>
 
-        <div class="input-group">
-            <label for="updatedCGPA">Updated CGPA from course form:</label>
-            <input type="number" step="0.01" id="updatedCGPA" min="0" max="5" placeholder="Enter CGPA (0-5)">
-        </div>
+            <button class="primary-btn" onclick="generateInputs()">Enter GPAs</button>
+            
+            <div id="gpaInputs"></div>
 
-        <div class="button-group">
-            <button onclick="calculateUnreleasedGPA()">Calculate</button>
-            <button onclick="resetForm()" style="background: linear-gradient(135deg, #e66465 0%, #9198e5 100%);">Reset</button>
-        </div>
+            <div class="input-group">
+                <label for="updatedCGPA">Updated CGPA from course form:</label>
+                <input type="number" step="0.01" id="updatedCGPA" min="0" max="5" placeholder="Enter CGPA">
+            </div>
 
-        <div class="result" id="result">
-            <p>Unreleased GPA for the last semester: <strong><span id="unreleasedGpaValue">0.00</span></strong></p>
-        </div>
+            <div class="button-group">
+                <button class="primary-btn" onclick="calculateUnreleasedGPA()">Calculate</button>
+                <button class="secondary-btn" onclick="resetForm()">Reset</button>
+            </div>
 
-        <div class="how-it-works">
-            <details>
-                <summary>How it Works</summary>
-                <ul>
-                    <li>Enter the number of completed semesters (excluding the semester you want to calculate)</li>
-                    <li>Input your GPA for each completed semester when prompted</li>
-                    <li>Enter your updated CGPA from your course form</li>
-                    <li>The calculator will determine your unreleased GPA using the formula:<br>
-                        <em>Unreleased GPA = (Updated CGPA × Total Semesters) - Sum of Previous GPAs</em></li>
-                    <li>If the result shows "Invalid", check if all your inputs are correct and within the valid range (0-5)</li>
-                </ul>
-            </details>
+            <div class="result" id="result">
+                <p>Unreleased GPA for the last semester: <span id="unreleasedGpaValue">0.00</span></p>
+                <div class="analysis-section">
+                    <div class="chart-container">
+                        <canvas id="gpaChart"></canvas>
+                    </div>
+                    <div class="analysis-text">
+                        <h3>Performance Analysis</h3>
+                        <div id="performanceAnalysis"></div>
+                        <h3>Recommendations</h3>
+                        <div id="recommendations"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
