@@ -1,5 +1,18 @@
 let gpaChart = null;
 
+// Add this new function to handle historical GPA data
+function getHistoricalGPAs(previousCGPA, previousUnits, lastGPA) {
+    // Estimate previous semester GPAs based on CGPA
+    const estimatedGPAs = [previousCGPA];
+    
+    // Add the calculated semester GPA
+    if (lastGPA >= 0 && lastGPA <= 5) {
+        estimatedGPAs.push(lastGPA);
+    }
+    
+    return estimatedGPAs;
+}
+
 function generateInputs() {
     const numSemesters = parseInt(document.getElementById("numSemesters").value);
     if (isNaN(numSemesters) || numSemesters < 1 || numSemesters > 12) {
@@ -11,26 +24,44 @@ function generateInputs() {
     gpaInputs.innerHTML = "";
 
     for (let i = 1; i <= numSemesters; i++) {
-        const div = document.createElement("div");
-        div.classList.add("input-group");
+        const semesterDiv = document.createElement("div");
+        semesterDiv.classList.add("semester-group");
 
-        const label = document.createElement("label");
-        label.textContent = `Semester ${i} GPA:`;
+        // GPA Input
+        const gpaDiv = document.createElement("div");
+        gpaDiv.classList.add("input-group");
+        const gpaLabel = document.createElement("label");
+        gpaLabel.textContent = `Semester ${i} GPA:`;
+        const gpaInput = document.createElement("input");
+        gpaInput.type = "number";
+        gpaInput.step = "0.01";
+        gpaInput.min = "0";
+        gpaInput.max = "5";
+        gpaInput.id = `gpa${i}`;
+        gpaInput.placeholder = "Enter GPA (0-5)";
+        gpaDiv.appendChild(gpaLabel);
+        gpaDiv.appendChild(gpaInput);
 
-        const input = document.createElement("input");
-        input.type = "number";
-        input.step = "0.01";
-        input.min = "0";
-        input.max = "5";
-        input.id = `gpa${i}`;
-        input.placeholder = "Enter GPA (0-5)";
+        // Credit Hours Input
+        const creditDiv = document.createElement("div");
+        creditDiv.classList.add("input-group");
+        const creditLabel = document.createElement("label");
+        creditLabel.textContent = `Semester ${i} Credit Hours:`;
+        const creditInput = document.createElement("input");
+        creditInput.type = "number";
+        creditInput.min = "1";
+        creditInput.id = `credits${i}`;
+        creditInput.placeholder = "Enter credit hours";
+        creditDiv.appendChild(creditLabel);
+        creditDiv.appendChild(creditInput);
 
-        div.appendChild(label);
-        div.appendChild(input);
-        gpaInputs.appendChild(div);
+        semesterDiv.appendChild(gpaDiv);
+        semesterDiv.appendChild(creditDiv);
+        gpaInputs.appendChild(semesterDiv);
     }
 }
 
+// Update the chart generation function
 function generateChart(gpas) {
     const ctx = document.getElementById('gpaChart').getContext('2d');
     
@@ -41,7 +72,7 @@ function generateChart(gpas) {
     gpaChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: gpas.map((_, index) => `Semester ${index + 1}`),
+            labels: gpas.map((_, index) => index === 0 ? 'Previous' : 'Current'),
             datasets: [{
                 label: 'GPA Progress',
                 data: gpas,
@@ -81,40 +112,54 @@ function generateChart(gpas) {
     });
 }
 
+// Update the calculation function
+function calculateUnreleasedGPA() {
+    const updatedCGPA = parseFloat(document.getElementById("updatedCGPA").value);
+    const previousCGPA = parseFloat(document.getElementById("previousCGPA").value);
+    const currentUnits = parseInt(document.getElementById("currentUnits").value);
+    const previousUnits = parseInt(document.getElementById("previousUnits").value);
+
+    if (!validateInputs(updatedCGPA, previousCGPA, currentUnits, previousUnits)) {
+        return;
+    }
+
+    const semesterUnits = currentUnits - previousUnits;
+    const unreleasedGPA = ((updatedCGPA * currentUnits) - (previousCGPA * previousUnits)) / semesterUnits;
+    const formattedGPA = unreleasedGPA.toFixed(2);
+
+    displayResults(
+        unreleasedGPA,
+        formattedGPA,
+        {updatedCGPA, previousCGPA, currentUnits, previousUnits, semesterUnits}
+    );
+
+    const gpas = [previousCGPA, parseFloat(formattedGPA)];
+    generateChart(gpas);
+    analyzePerformance(gpas);
+}
+
+// Update the analysis function to handle two-point data
 function analyzePerformance(gpas) {
     const analysisDiv = document.getElementById('performanceAnalysis');
     const recommendationsDiv = document.getElementById('recommendations');
     
-    const avgGPA = gpas.reduce((a, b) => a + b) / gpas.length;
-    const lastGPA = gpas[gpas.length - 1];
-    const previousGPA = gpas[gpas.length - 2];
+    const previousGPA = gpas[0];
+    const currentGPA = gpas[gpas.length - 1];
+    const difference = currentGPA - previousGPA;
     
     let analysisHTML = `
-        <p>Average GPA: <strong>${avgGPA.toFixed(2)}</strong></p>
-        <p>Latest GPA: <strong>${lastGPA.toFixed(2)}</strong></p>
+        <p>Previous CGPA: <strong>${previousGPA.toFixed(2)}</strong></p>
+        <p>Current Semester GPA: <strong>${currentGPA.toFixed(2)}</strong></p>
+        <p>GPA Change: <strong class="${difference > 0 ? 'trend-positive' : difference < 0 ? 'trend-negative' : 'trend-neutral'}">
+            ${difference > 0 ? '+' : ''}${difference.toFixed(2)}
+        </strong></p>
     `;
-    
-    const strongPeriods = gpas.map((gpa, i) => ({gpa, semester: i+1}))
-                             .filter(item => item.gpa >= 4.0);
-    const weakPeriods = gpas.map((gpa, i) => ({gpa, semester: i+1}))
-                           .filter(item => item.gpa < 2.5);
-    
-    if (strongPeriods.length > 0) {
-        analysisHTML += `<p class="trend-positive">Excellent performance in semesters: 
-            ${strongPeriods.map(p => p.semester).join(', ')}</p>`;
-    }
-    
-    if (weakPeriods.length > 0) {
-        analysisHTML += `<p class="trend-negative">Challenging periods in semesters: 
-            ${weakPeriods.map(p => p.semester).join(', ')}</p>`;
-    }
 
     let recommendationsHTML = '<ul>';
     
-    // GPA Trend Analysis
-    if (lastGPA < previousGPA) {
+    if (difference < 0) {
         recommendationsHTML += `
-            <li class="trend-negative">Your GPA has decreased from ${previousGPA.toFixed(2)} to ${lastGPA.toFixed(2)}. 
+            <li class="trend-negative">Your GPA has decreased by ${Math.abs(difference).toFixed(2)} points. 
             Consider:
             <ul>
                 <li>Reviewing your study habits</li>
@@ -122,35 +167,14 @@ function analyzePerformance(gpas) {
                 <li>Seeking help from professors during office hours</li>
             </ul>
             </li>`;
-    } else if (lastGPA > previousGPA) {
+    } else if (difference > 0) {
         recommendationsHTML += `
-            <li class="trend-positive">Great improvement! Your GPA increased from ${previousGPA.toFixed(2)} to ${lastGPA.toFixed(2)}. 
+            <li class="trend-positive">Great improvement! Your GPA increased by ${difference.toFixed(2)} points. 
             Keep maintaining:
             <ul>
                 <li>Your current study routine</li>
                 <li>Time management strategies</li>
                 <li>Active participation in classes</li>
-            </ul>
-            </li>`;
-    }
-
-    // Overall Performance Recommendations
-    if (avgGPA < 2.5) {
-        recommendationsHTML += `
-            <li class="trend-negative">Consider:
-            <ul>
-                <li>Meeting with an academic advisor</li>
-                <li>Joining study groups</li>
-                <li>Using university tutoring services</li>
-            </ul>
-            </li>`;
-    } else if (avgGPA >= 4.0) {
-        recommendationsHTML += `
-            <li class="trend-positive">Outstanding performance! Consider:
-            <ul>
-                <li>Applying for honors programs</li>
-                <li>Seeking research opportunities</li>
-                <li>Mentoring other students</li>
             </ul>
             </li>`;
     }
@@ -161,52 +185,71 @@ function analyzePerformance(gpas) {
     recommendationsDiv.innerHTML = recommendationsHTML;
 }
 
-function calculateUnreleasedGPA() {
-    const numSemesters = parseInt(document.getElementById("numSemesters").value);
-    const updatedCGPA = parseFloat(document.getElementById("updatedCGPA").value);
+function validateSemesterInput(gpa, credits, semesterNum) {
+    if (isNaN(gpa) || gpa < 0 || gpa > 5) {
+        alert(`Please enter a valid GPA for semester ${semesterNum} (between 0 and 5).`);
+        return false;
+    }
+    if (isNaN(credits) || credits < 1) {
+        alert(`Please enter valid credit hours for semester ${semesterNum}.`);
+        return false;
+    }
+    return true;
+}
 
+function validateInputs(updatedCGPA, previousCGPA, currentUnits, previousUnits) {
     if (isNaN(updatedCGPA) || updatedCGPA < 0 || updatedCGPA > 5) {
         alert("Please enter a valid updated CGPA between 0 and 5.");
-        return;
+        return false;
     }
-
-    let totalGPA = 0;
-    const gpas = [];
-    
-    // Validate and collect all semester GPAs
-    for (let i = 1; i <= numSemesters; i++) {
-        const gpa = parseFloat(document.getElementById(`gpa${i}`).value);
-        if (isNaN(gpa) || gpa < 0 || gpa > 5) {
-            alert(`Please enter a valid GPA for Semester ${i} (between 0 and 5).`);
-            return;
-        }
-        totalGPA += gpa;
-        gpas.push(gpa);
+    if (isNaN(previousCGPA) || previousCGPA < 0 || previousCGPA > 5) {
+        alert("Please enter a valid previous CGPA between 0 and 5.");
+        return false;
     }
+    if (isNaN(currentUnits) || currentUnits <= 0) {
+        alert("Please enter valid current total credit hours.");
+        return false;
+    }
+    if (isNaN(previousUnits) || previousUnits < 0 || previousUnits >= currentUnits) {
+        alert("Previous credit hours must be less than current credit hours.");
+        return false;
+    }
+    return true;
+}
 
-    const totalSemesters = numSemesters + 1;
-    const unreleasedGPA = ((updatedCGPA * totalSemesters) - totalGPA).toFixed(2);
-    const unreleasedGPAValue = parseFloat(unreleasedGPA);
-
+function displayResults(unreleasedGPA, formattedGPA, params) {
     document.getElementById("result").style.display = "block";
     
-    if (unreleasedGPAValue > 5 || unreleasedGPAValue < 0) {
+    if (unreleasedGPA > 5 || unreleasedGPA < 0) {
         document.getElementById("unreleasedGpaValue").textContent = "Invalid (check inputs)";
         return;
     }
 
-    document.getElementById("unreleasedGpaValue").textContent = unreleasedGPA;
-    gpas.push(unreleasedGPAValue);
-
-    generateChart(gpas);
-    analyzePerformance(gpas);
+    const breakdownHTML = `
+        <div class="calculation-steps">
+            <h3>Calculation Breakdown</h3>
+            <p>Formula: (Current CGPA × Current Units - Previous CGPA × Previous Units) ÷ Semester Units</p>
+            <ul>
+                <li>Previous CGPA: ${params.previousCGPA}</li>
+                <li>Previous Units: ${params.previousUnits}</li>
+                <li>Current CGPA: ${params.updatedCGPA}</li>
+                <li>Current Units: ${params.currentUnits}</li>
+                <li>This Semester Units: ${params.semesterUnits}</li>
+                <li>Calculation: (${params.updatedCGPA} × ${params.currentUnits} - ${params.previousCGPA} × ${params.previousUnits}) ÷ ${params.semesterUnits}</li>
+                <li>Result: ${formattedGPA}</li>
+            </ul>
+        </div>
+    `;
+    
+    document.getElementById("calculationBreakdown").innerHTML = breakdownHTML;
+    document.getElementById("unreleasedGpaValue").textContent = formattedGPA;
 }
 
 function resetForm() {
-    document.getElementById("numSemesters").value = "";
-    document.getElementById("gpaInputs").innerHTML = "";
-    document.getElementById("updatedCGPA").value = "";
+    const fieldsToReset = ["previousCGPA", "updatedCGPA", "currentUnits", "previousUnits"];
+    fieldsToReset.forEach(field => document.getElementById(field).value = "");
     document.getElementById("result").style.display = "none";
+    document.getElementById("calculationBreakdown").innerHTML = "";
     if (gpaChart) {
         gpaChart.destroy();
     }
