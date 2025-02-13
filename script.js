@@ -61,6 +61,71 @@ function generateInputs() {
     }
 }
 
+// Initialize EmailJS
+(function() {
+    emailjs.init("bNjrOjX7mVJxdLTNq"); // Replace with your actual public key
+})();
+
+// Update review form submission handler
+document.getElementById('reviewForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    
+    const submitButton = document.getElementById('submitReview');
+    const spinner = document.getElementById('reviewSpinner');
+    const notification = document.getElementById('reviewNotification');
+    
+    submitButton.disabled = true;
+    spinner.style.display = 'block';
+    notification.style.display = 'none';
+    
+    const reviewData = {
+        name: document.getElementById('reviewName').value || 'Anonymous',
+        email: document.getElementById('reviewEmail').value || 'No email provided',
+        rating: document.querySelector('input[name="rating"]:checked')?.value || 'No rating',
+        message: document.getElementById('reviewMessage').value,
+        to_email: 'murewatajala@gmail.com' // Add your email as destination
+    };
+
+    // Send email using EmailJS with updated template parameters
+    emailjs.send(
+        "service_sganc4a",
+        "template_uwx90lk",
+        {
+            to_email: reviewData.to_email,
+            from_name: reviewData.name,
+            from_email: reviewData.email,
+            rating: reviewData.rating,
+            message: reviewData.message,
+            reply_to: reviewData.email,
+            subject: `New Calculator Review from ${reviewData.name}`
+        }
+    ).then(
+        function(response) {
+            showNotification('Thank you for your review! 🎉', 'success');
+            document.getElementById('reviewForm').reset();
+        },
+        function(error) {
+            showNotification('Failed to send review. Please try again.', 'error');
+            console.error("Error:", error);
+        }
+    ).finally(() => {
+        submitButton.disabled = false;
+        spinner.style.display = 'none';
+    });
+});
+
+function showNotification(message, type) {
+    const notification = document.getElementById('reviewNotification');
+    notification.textContent = message;
+    notification.className = `notification ${type}`;
+    notification.style.display = 'block';
+    
+    // Auto-hide notification after 5 seconds
+    setTimeout(() => {
+        notification.style.display = 'none';
+    }, 5000);
+}
+
 // Update the chart generation function
 function generateChart(gpas) {
     const ctx = document.getElementById('gpaChart').getContext('2d');
