@@ -149,7 +149,7 @@ function analyzePerformance(gpas) {
     
     let analysisHTML = `
         <p>Previous CGPA: <strong>${previousGPA.toFixed(2)}</strong></p>
-        <p>Current Semester GPA: <strong>${currentGPA.toFixed(2)}</strong></p>
+        <p>Current Semester GPA: <strong>${currentGPA.toFixed(2)}</strong> (±0.01) </p>
         <p>GPA Change: <strong class="${difference > 0 ? 'trend-positive' : difference < 0 ? 'trend-negative' : 'trend-neutral'}">
             ${difference > 0 ? '+' : ''}${difference.toFixed(2)}
         </strong></p>
