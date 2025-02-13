@@ -124,7 +124,7 @@ function calculateUnreleasedGPA() {
     }
 
     const semesterUnits = currentUnits - previousUnits;
-    const unreleasedGPA = ((updatedCGPA * currentUnits) - (previousCGPA * previousUnits)) / semesterUnits;
+    const unreleasedGPA = Math.round(((updatedCGPA * currentUnits) - (previousCGPA * previousUnits))) / semesterUnits;
     const formattedGPA = unreleasedGPA.toFixed(2);
 
     displayResults(
