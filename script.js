@@ -220,7 +220,7 @@ function validateInputs(updatedCGPA, previousCGPA, currentUnits, previousUnits) 
 function displayResults(unreleasedGPA, formattedGPA, params) {
     document.getElementById("result").style.display = "block";
     
-    if (unreleasedGPA > 5 || unreleasedGPA < 0) {
+    if (unreleasedGPA.toFixed(0) > 5 || unreleasedGPA < 0) {
         document.getElementById("unreleasedGpaValue").textContent = "Invalid (check inputs)";
         return;
     }
